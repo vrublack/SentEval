@@ -13,7 +13,8 @@ Generic sentence evaluation scripts wrapper
 from __future__ import absolute_import, division, unicode_literals
 
 from senteval import utils
-from senteval.bean import BeanEval
+
+from senteval.bean_masc import BeanMascEval
 from senteval.binary import CREval, MREval, MPQAEval, SUBJEval
 from senteval.snli import SNLIEval
 from senteval.trec import TRECEval
@@ -47,7 +48,7 @@ class SE(object):
         self.batcher = batcher
         self.prepare = prepare if prepare else lambda x, y: None
 
-        self.list_tasks = ['BEAN', 'CR', 'MR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
+        self.list_tasks = ['BEAN', 'MASC', 'CR', 'MR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
                            'SICKRelatedness', 'SICKEntailment', 'STSBenchmark',
                            'SNLI', 'ImageCaptionRetrieval', 'STS12', 'STS13',
                            'STS14', 'STS15', 'STS16',
@@ -96,8 +97,8 @@ class SE(object):
             self.evaluation = ImageCaptionRetrievalEval(tpath + '/downstream/COCO', seed=self.params.seed)
 
         # added tasks
-        elif name == 'BEAN':
-            self.evaluation = BeanEval(osp.join(tpath, 'downstream', 'BEAN'), seed=self.params.seed)
+        elif name == 'BEAN' or name == 'MASC':
+            self.evaluation = BeanMascEval(osp.join(tpath, 'downstream', name), name, seed=self.params.seed)
 
         # Probing Tasks
         elif name == 'Length':

@@ -7,7 +7,12 @@
 
 '''
 BEAN formality evaluation
+## - Sentence-level formality annotations for 4 genres (formality-corpus.tgz)
 Ellie Pavlick and Joel Tetreault. "An Empirical Analysis of Formality in Online Communication". TACL 2016.
+
+# MASC sentences
+## - Human scores of formality for words, phrases, and sentences
+##   REF: Ellie Pavlick and Ani Nenkova. "Inducing Lexical Style Properties for Paraphrase and Genre Differentiation". NAACL 2015.
 '''
 
 from __future__ import absolute_import, division, unicode_literals
@@ -20,11 +25,14 @@ from scipy.stats import spearmanr
 from sklearn.linear_model import RidgeCV
 
 
-class BeanEval(object):
-    def __init__(self, task_path, seed=1111):
+class BeanMascEval(object):
+    def __init__(self, task_path, task, seed=1111):
         self.seed = seed
 
-        logging.debug('***** Transfer task : BEAN formality classification *****\n\n')
+        assert task in ['BEAN', 'MASC']
+        self.task = task
+
+        logging.debug(f'***** Transfer task : {self.task} formality classification *****\n\n')
 
         self.eval_data = self.loadFile(task_path)
 
@@ -34,8 +42,16 @@ class BeanEval(object):
 
     def loadFile(self, task_path):
         X, y = [], []
-        with open(osp.join(task_path, 'scores'), encoding='utf8', errors='ignore') as f_scores, \
-                open(osp.join(task_path, 'bean-tokenized-sentences'), encoding='utf8', errors='ignore') as f_sentences:
+
+        if self.task == 'BEAN':
+            fname_scores = osp.join(task_path, 'scores')
+            fname_sentences = osp.join(task_path, 'bean-tokenized-sentences')
+        else:
+            fname_scores = osp.join(task_path, 'naacl-2015-style-scores', 'formality', 'human', 'sentence-scores')
+            fname_sentences = osp.join(task_path, 'masc-tokenized-sentences')
+
+        with open(fname_scores, encoding='utf8', errors='ignore') as f_scores, \
+                open(fname_sentences, encoding='utf8', errors='ignore') as f_sentences:
             for line_score, line_sentence in zip(f_scores, f_sentences):
                 score = float(line_score.split("\t")[0])
                 tokens = line_sentence.split()
