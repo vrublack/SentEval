@@ -9,11 +9,14 @@ from __future__ import absolute_import, division, unicode_literals
 
 import argparse
 import logging
+import queue
 import subprocess
 import sys
+import threading
+
 import numpy as np
 import os.path as osp
-
+import sentencepiece as spm
 
 # Set PATHs
 PATH_TO_SENTEVAL = '..'
@@ -24,28 +27,54 @@ sys.path.insert(0, PATH_TO_SENTEVAL)
 import senteval
 
 proc = None
+sp = None
+count = 0
+outq = queue.Queue()
 
+embedding_prefix = 'Sequence embedding: '
 
 def prepare(params, samples):
-    global proc
+    global proc, sp
     # keep open the extractor as a subprocess and send requests for each batch
     proc = subprocess.Popen(args.extract_command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, encoding='utf8',
                             shell=True, bufsize=1)
 
+    t = threading.Thread(target=output_reader)
+    t.start()
 
-def batcher(params, batch):
-    for sentence in batch:
-        proc.stdin.write(' '.join(sentence) + '\n')
+    if args.bpe_model:
+        sp = spm.SentencePieceProcessor(model_file=args.bpe_model)
 
-    embeddings = []
-    received_embeddings = 0
-    embedding_prefix = 'Sequence embedding: '
+
+def output_reader():
     for line in proc.stdout:
         if line.startswith(embedding_prefix):
-            embeddings.append(list(map(float, line[len(embedding_prefix):].rstrip().split(' '))))
-            received_embeddings += 1
-            if received_embeddings == len(batch):
-                break
+            outq.put(line)
+
+
+def batcher(params, batch):
+    for sentence_tokens in batch:
+        if sp:
+            sentence_tokens = sp.encode(' '.join(sentence_tokens), out_type=str)
+        if len(sentence_tokens) > args.max_tokens:
+            sentence_tokens = sentence_tokens[:args.max_tokens]
+        sentence = ' '.join(sentence_tokens)
+        print('Written: ' + sentence)
+        proc.stdin.write(sentence + '\n')
+
+    embeddings = []
+    global count
+
+    for i in range(len(batch)):
+        try:
+            line = outq.get(timeout=60)
+        except queue.Empty as e:
+            print(e)
+            sys.exit(1)
+        embeddings.append(list(map(float, line[len(embedding_prefix):].rstrip().split(' '))))
+        count += 1
+        if count % 10 == 0:
+            print(f'{count} embeddings received')
 
     return np.array(embeddings)
 
@@ -62,14 +91,16 @@ if __name__ == "__main__":
     parser.add_argument('--extract-command', required=True,
                         help='Command to start the extractor that reads sentences from stdin '
                              'and prints embeddings to stdout')
+    parser.add_argument('--bpe-model', help='Sentencepiece BPE to encode sentences before piping them to the command')
+    parser.add_argument('--max-tokens', default=1000, type=int, help='Truncates sentences longer than this many tokens')
     args = parser.parse_args()
 
     se = senteval.engine.SE(params_senteval, batcher, prepare)
-    transfer_tasks = ['BEAN', 'MASC', 'STS12', 'STS13', 'STS14', 'STS15', 'STS16',
-                      'MR', 'CR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
-                      'SICKEntailment', 'SICKRelatedness', 'STSBenchmark',
-                      'Length', 'WordContent', 'Depth', 'TopConstituents',
-                      'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
-                      'OddManOut', 'CoordinationInversion']
+    transfer_tasks = ['BEAN', 'MASC']
     results = se.eval(transfer_tasks)
     print(results)
+
+    # the reader process might still be running
+    sys.exit(0)
+
+
