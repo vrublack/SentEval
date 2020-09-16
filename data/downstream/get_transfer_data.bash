@@ -238,5 +238,52 @@ curl -Lo $data_path/MRPC/msr_paraphrase_train.txt https://dl.fbaipublicfiles.com
 curl -Lo $data_path/MRPC/msr_paraphrase_test.txt https://dl.fbaipublicfiles.com/senteval/senteval_data/msr_paraphrase_test.txt
 
 
+### BEAN sentences
+## - Sentence-level formality annotations for 4 genres (formality-corpus.tgz)
+##   REF: Ellie Pavlick and Joel Tetreault. "An Empirical Analysis of Formality in Online Communication". TACL 2016.
+##        Shibamouli Lahiri. "SQUINKY! A Corpus of Sentence-level Formality, Informativeness, and Implicature". arXiv:1506.02306
+mkdir $data_path/BEAN
+curl -Lo $data_path/BEAN/formality-corpus.tgz http://www.seas.upenn.edu/~nlp/resources/formality-corpus.tgz
+tar -xvf $data_path/BEAN/formality-corpus.tgz -C $data_path/BEAN
+bean_sentence_scores=$data_path/BEAN/scores
+for genre in answers email blog news; do
+  cat $data_path/BEAN/data-for-release/$genre \
+    >> $bean_sentence_scores
+done;
+
+bean_tokenized_sentences=$data_path/BEAN/bean-tokenized-sentences
+iconv -f ISO-8859-2 -t UTF-8 \
+  < $bean_sentence_scores   \
+  | cut -f4 | sed "s/http[^ ]*//g"     \
+  | sed "s/ n't/n't/g" | sed "s/ '/'/g" \
+  | $SCRIPTS/tokenizer/normalize-punctuation.perl -l en  \
+  | $MTOKENIZER -l en -a -no-escape \
+  | perl -ne 'print lc' \
+  >> $bean_tokenized_sentences
+
+rm $data_path/BEAN/formality-corpus.tgz
+rm -r $data_path/BEAN/data-for-release
+
+
+# MASC sentences
+## - Human scores of formality for words, phrases, and sentences (style-scores.tar.gz)
+##   REF: Ellie Pavlick and Ani Nenkova. "Inducing Lexical Style Properties for Paraphrase and Genre Differentiation". NAACL 2015.
+mkdir $data_path/MASC
+curl -Lo $data_path/MASC/style-scores.tar.gz http://www.seas.upenn.edu/~nlp/resources/style-scores.tar.gz
+tar -xvf $data_path/MASC/style-scores.tar.gz -C $data_path/MASC naacl-2015-style-scores/formality/human/sentence-scores
+
+masc_sentence_scores=$data_path/MASC/sentence-scores
+masc_tokenized_sentences=$data_path/MASC/masc-tokenized-sentences
+echo " * Tokenizing MASC sentences ..."
+cut -f3 $data_path/MASC/naacl-2015-style-scores/formality/human/sentence-scores \
+    | sed "s/http[^ ]*//g" | sed "s/ n't/n't/g" | sed "s/ '/'/g"    \
+  | $SCRIPTS/tokenizer/normalize-punctuation.perl -l en  \
+  | $MTOKENIZER -l en -a -no-escape \
+  > $masc_tokenized_sentences
+
+rm $data_path/MASC/style-scores.tar.gz
+
+
+
 # remove moses folder
 rm -rf mosesdecoder

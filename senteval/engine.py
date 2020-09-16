@@ -13,6 +13,7 @@ Generic sentence evaluation scripts wrapper
 from __future__ import absolute_import, division, unicode_literals
 
 from senteval import utils
+from senteval.bean import BeanEval
 from senteval.binary import CREval, MREval, MPQAEval, SUBJEval
 from senteval.snli import SNLIEval
 from senteval.trec import TRECEval
@@ -22,6 +23,7 @@ from senteval.sts import STS12Eval, STS13Eval, STS14Eval, STS15Eval, STS16Eval, 
 from senteval.sst import SSTEval
 from senteval.rank import ImageCaptionRetrievalEval
 from senteval.probing import *
+import os.path as osp
 
 class SE(object):
     def __init__(self, params, batcher, prepare=None):
@@ -45,7 +47,7 @@ class SE(object):
         self.batcher = batcher
         self.prepare = prepare if prepare else lambda x, y: None
 
-        self.list_tasks = ['CR', 'MR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
+        self.list_tasks = ['BEAN', 'CR', 'MR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
                            'SICKRelatedness', 'SICKEntailment', 'STSBenchmark',
                            'SNLI', 'ImageCaptionRetrieval', 'STS12', 'STS13',
                            'STS14', 'STS15', 'STS16',
@@ -92,6 +94,10 @@ class SE(object):
             self.evaluation = eval(name + 'Eval')(tpath + '/downstream/STS/' + fpath, seed=self.params.seed)
         elif name == 'ImageCaptionRetrieval':
             self.evaluation = ImageCaptionRetrievalEval(tpath + '/downstream/COCO', seed=self.params.seed)
+
+        # added tasks
+        elif name == 'BEAN':
+            self.evaluation = BeanEval(osp.join(tpath, 'downstream', 'BEAN'), seed=self.params.seed)
 
         # Probing Tasks
         elif name == 'Length':
