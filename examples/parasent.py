@@ -65,7 +65,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     se = senteval.engine.SE(params_senteval, batcher, prepare)
-    transfer_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16',
+    transfer_tasks = ['BEAN', 'MASC', 'STS12', 'STS13', 'STS14', 'STS15', 'STS16',
                       'MR', 'CR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
                       'SICKEntailment', 'SICKRelatedness', 'STSBenchmark',
                       'Length', 'WordContent', 'Depth', 'TopConstituents',
