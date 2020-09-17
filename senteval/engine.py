@@ -12,6 +12,8 @@ Generic sentence evaluation scripts wrapper
 '''
 from __future__ import absolute_import, division, unicode_literals
 
+import time
+
 from senteval import utils
 
 from senteval.bean_masc import BeanMascEval
@@ -64,6 +66,8 @@ class SE(object):
 
         tpath = self.params.task_path
         assert name in self.list_tasks, str(name) + ' not in ' + str(self.list_tasks)
+
+        start = time.time()
 
         # Original SentEval tasks
         if name == 'CR':
@@ -126,5 +130,8 @@ class SE(object):
         self.evaluation.do_prepare(self.params, self.prepare)
 
         self.results = self.evaluation.run(self.params, self.batcher)
+
+        end = time.time()
+        print(f'Eval {name} took {end - start} s')
 
         return self.results
