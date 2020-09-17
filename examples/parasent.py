@@ -38,14 +38,14 @@ def prepare(params, samples):
     global proc, sp
 
     # keep open the extractor as a subprocess and send requests for each batch
-    end_process()
-    proc = subprocess.Popen(args.extract_command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, encoding='utf8',
-                            shell=True, bufsize=1, preexec_fn=os.setsid)
+    if proc is None:
+        proc = subprocess.Popen(args.extract_command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, encoding='utf8',
+                                shell=True, bufsize=1, preexec_fn=os.setsid)
 
-    t = threading.Thread(target=output_reader)
-    t.start()
+        t = threading.Thread(target=output_reader)
+        t.start()
 
-    if args.bpe_model:
+    if args.bpe_model and sp is None:
         sp = spm.SentencePieceProcessor(model_file=args.bpe_model)
 
 
