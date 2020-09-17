@@ -9,7 +9,9 @@ from __future__ import absolute_import, division, unicode_literals
 
 import argparse
 import logging
+import os
 import queue
+import signal
 import subprocess
 import sys
 import threading
@@ -28,22 +30,28 @@ import senteval
 
 proc = None
 sp = None
-count = 0
 outq = queue.Queue()
 
 embedding_prefix = 'Sequence embedding: '
 
 def prepare(params, samples):
     global proc, sp
+
     # keep open the extractor as a subprocess and send requests for each batch
+    end_process()
     proc = subprocess.Popen(args.extract_command, stdout=subprocess.PIPE, stdin=subprocess.PIPE, encoding='utf8',
-                            shell=True, bufsize=1)
+                            shell=True, bufsize=1, preexec_fn=os.setsid)
 
     t = threading.Thread(target=output_reader)
     t.start()
 
     if args.bpe_model:
         sp = spm.SentencePieceProcessor(model_file=args.bpe_model)
+
+
+def end_process():
+    if proc is not None:
+        os.killpg(os.getpgid(proc.pid), signal.SIGINT)
 
 
 def output_reader():
@@ -59,22 +67,14 @@ def batcher(params, batch):
         if len(sentence_tokens) > args.max_tokens:
             sentence_tokens = sentence_tokens[:args.max_tokens]
         sentence = ' '.join(sentence_tokens)
-        print('Written: ' + sentence)
         proc.stdin.write(sentence + '\n')
 
     embeddings = []
     global count
 
     for i in range(len(batch)):
-        try:
-            line = outq.get(timeout=60)
-        except queue.Empty as e:
-            print(e)
-            sys.exit(1)
+        line = outq.get(timeout=60)
         embeddings.append(list(map(float, line[len(embedding_prefix):].rstrip().split(' '))))
-        count += 1
-        if count % 10 == 0:
-            print(f'{count} embeddings received')
 
     return np.array(embeddings)
 
@@ -95,12 +95,14 @@ if __name__ == "__main__":
     parser.add_argument('--max-tokens', default=1000, type=int, help='Truncates sentences longer than this many tokens')
     args = parser.parse_args()
 
-    se = senteval.engine.SE(params_senteval, batcher, prepare)
-    transfer_tasks = ['BEAN', 'MASC']
-    results = se.eval(transfer_tasks)
-    print(results)
-
-    # the reader process might still be running
-    sys.exit(0)
+    try:
+        se = senteval.engine.SE(params_senteval, batcher, prepare)
+        transfer_tasks = ['MASC', 'BEAN']
+        results = se.eval(transfer_tasks)
+        print(results)
+    except Exception as e:
+        raise e
+    finally:
+        end_process()
 
 
