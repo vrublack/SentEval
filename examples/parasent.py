@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, unicode_literals
 import argparse
 import logging
 import os
+import os.path as osp
 import queue
 import signal
 import subprocess
@@ -17,7 +18,6 @@ import sys
 import threading
 
 import numpy as np
-import os.path as osp
 import sentencepiece as spm
 
 # Set PATHs
@@ -33,6 +33,7 @@ sp = None
 outq = queue.Queue()
 
 embedding_prefix = 'Sequence embedding: '
+
 
 def prepare(params, samples):
     global proc, sp
@@ -79,10 +80,6 @@ def batcher(params, batch):
     return np.array(embeddings)
 
 
-# Set params for SentEval
-params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': True, 'kfold': 10, 'batch_size': 512}
-params_senteval['classifier'] = {'nhid': 0, 'optim': 'adam', 'batch_size': 64,
-                                 'tenacity': 5, 'epoch_size': 4}
 # Set up logger
 logging.basicConfig(format='%(asctime)s : %(message)s', level=logging.DEBUG)
 
@@ -93,21 +90,25 @@ if __name__ == "__main__":
                              'and prints embeddings to stdout')
     parser.add_argument('--bpe-model', help='Sentencepiece BPE to encode sentences before piping them to the command')
     parser.add_argument('--max-tokens', default=1000, type=int, help='Truncates sentences longer than this many tokens')
+    parser.add_argument('--tasks', default=['STS12', 'STS13', 'STS14', 'STS15', 'STS16',
+                                            'MR', 'CR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
+                                            'SICKEntailment', 'SICKRelatedness', 'STSBenchmark',
+                                            'Length', 'WordContent', 'Depth', 'TopConstituents',
+                                            'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
+                                            'OddManOut', 'CoordinationInversion', 'MASC', 'BEAN'], nargs='+')
+    parser.add_argument('--kfold', type=int, default=10)
     args = parser.parse_args()
+
+    # Set params for SentEval
+    params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': True, 'kfold': args.kfold, 'batch_size': 512,
+                       'classifier': {'nhid': 0, 'optim': 'adam', 'batch_size': 64,
+                                      'tenacity': 5, 'epoch_size': 4}}
 
     try:
         se = senteval.engine.SE(params_senteval, batcher, prepare)
-        transfer_tasks = ['STS12', 'STS13', 'STS14', 'STS15', 'STS16',
-                      'MR', 'CR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
-                      'SICKEntailment', 'SICKRelatedness', 'STSBenchmark',
-                      'Length', 'WordContent', 'Depth', 'TopConstituents',
-                      'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
-                      'OddManOut', 'CoordinationInversion', 'MASC', 'BEAN']
-        results = se.eval(transfer_tasks)
+        results = se.eval(args.tasks)
         print(results)
     except Exception as e:
         raise e
     finally:
         end_process()
-
-
