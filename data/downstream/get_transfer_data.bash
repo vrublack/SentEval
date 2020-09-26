@@ -284,6 +284,9 @@ cut -f3 $data_path/MASC/naacl-2015-style-scores/formality/human/sentence-scores 
 rm $data_path/MASC/style-scores.tar.gz
 
 
+# AmBrit
+git clone https://github.com/vrublack/AmBrit
+mv AmBrit/data/* $data_path/AmBrit
 
 # remove moses folder
 rm -rf mosesdecoder

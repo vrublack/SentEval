@@ -90,3 +90,11 @@ class MPQAEval(BinaryClassifierEval):
         pos = self.loadFile(os.path.join(task_path, 'mpqa.pos'))
         neg = self.loadFile(os.path.join(task_path, 'mpqa.neg'))
         super(self.__class__, self).__init__(pos, neg, seed)
+
+
+class AmBritEval(BinaryClassifierEval):
+    def __init__(self, task_path, seed=1111):
+        logging.debug('***** Transfer task : AmBrit *****\n\n')
+        british = self.loadFile(os.path.join(task_path, 'british.txt'))
+        american = self.loadFile(os.path.join(task_path, 'american.txt'))
+        super(self.__class__, self).__init__(british, american, seed)

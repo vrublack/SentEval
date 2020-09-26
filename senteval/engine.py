@@ -17,7 +17,7 @@ import time
 from senteval import utils
 
 from senteval.bean_masc import BeanMascEval
-from senteval.binary import CREval, MREval, MPQAEval, SUBJEval
+from senteval.binary import CREval, MREval, MPQAEval, SUBJEval, AmBritEval
 from senteval.snli import SNLIEval
 from senteval.trec import TRECEval
 from senteval.sick import SICKRelatednessEval, SICKEntailmentEval
@@ -56,7 +56,7 @@ class SE(object):
                            'STS14', 'STS15', 'STS16',
                            'Length', 'WordContent', 'Depth', 'TopConstituents',
                            'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
-                           'OddManOut', 'CoordinationInversion']
+                           'OddManOut', 'CoordinationInversion', 'AmBrit']
 
     def eval(self, name):
         # evaluate on evaluation [name], either takes string or list of strings
@@ -76,6 +76,8 @@ class SE(object):
             self.evaluation = MREval(tpath + '/downstream/MR', seed=self.params.seed)
         elif name == 'MPQA':
             self.evaluation = MPQAEval(tpath + '/downstream/MPQA', seed=self.params.seed)
+        elif name == 'AmBrit':
+            self.evaluation = AmBritEval(tpath + '/downstream/AmBrit', seed=self.params.seed)
         elif name == 'SUBJ':
             self.evaluation = SUBJEval(tpath + '/downstream/SUBJ', seed=self.params.seed)
         elif name == 'SST2':
