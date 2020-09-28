@@ -107,8 +107,7 @@ if __name__ == "__main__":
     # Set params for SentEval
     params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': True, 'kfold': args.kfold, 'batch_size': 512,
                        'classifier': {'nhid': 0, 'optim': 'adam', 'batch_size': 64,
-                                      'tenacity': 5, 'epoch_size': 4},
-                       'tokenized': False}
+                                      'tenacity': 5, 'epoch_size': 4}}
 
     try:
         se = senteval.engine.SE(params_senteval, batcher, prepare)

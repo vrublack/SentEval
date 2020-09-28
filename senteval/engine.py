@@ -107,7 +107,7 @@ class SE(object):
         elif name == 'AmBrit':
             self.evaluation = AmBritEval(tpath + '/downstream/AmBrit', seed=self.params.seed)
         elif name == 'AmazonJa':
-            self.evaluation = AmazonJaEval(osp.join(tpath, 'downstream', name), self.params.tokenized, seed=self.params.seed)
+            self.evaluation = AmazonJaEval(osp.join(tpath, 'downstream', name), seed=self.params.seed)
         elif name == 'Rite2JaBC-Entailment':
             self.evaluation = Rite2JaBCEntailmentEval(osp.join(tpath, 'downstream', 'Rite2'), seed=self.params.seed)
 

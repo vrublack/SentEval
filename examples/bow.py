@@ -109,7 +109,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set params for SentEval
-    params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': False, 'kfold': args.kfold, 'tokenized': True}
+    params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': False, 'kfold': args.kfold}
     params_senteval['classifier'] = {'nhid': 0, 'optim': 'rmsprop', 'batch_size': 128,
                                      'tenacity': 3, 'epoch_size': 2}
 
