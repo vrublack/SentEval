@@ -30,8 +30,8 @@ class BinaryClassifierEval(object):
         # prepare puts everything it outputs in "params" : params.word2id etc
         # Those output will be further used by "batcher".
 
-    def loadFile(self, fpath):
-        with io.open(fpath, 'r', encoding='latin-1') as f:
+    def loadFile(self, fpath, encoding='latin-1'):
+        with io.open(fpath, 'r', encoding=encoding) as f:
             return [line.split() for line in f.read().splitlines()]
 
     def run(self, params, batcher):
@@ -98,3 +98,13 @@ class AmBritEval(BinaryClassifierEval):
         british = self.loadFile(os.path.join(task_path, 'british.txt'))
         american = self.loadFile(os.path.join(task_path, 'american.txt'))
         super(self.__class__, self).__init__(british, american, seed)
+
+class AmazonJaEval(BinaryClassifierEval):
+    def __init__(self, task_path, tokenized, seed=1111):
+        logging.debug('***** Transfer task : AmazonJa *****\n\n')
+        ending = '.txt.sp.tok' if tokenized else '.txt.sp.detok'
+        positive = self.loadFile(os.path.join(task_path, '10000positive' + ending), encoding='utf8')
+        negative = self.loadFile(os.path.join(task_path, '10000negative' + ending), encoding='utf8')
+        super(self.__class__, self).__init__(positive, negative, seed)
+
+

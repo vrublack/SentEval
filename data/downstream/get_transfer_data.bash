@@ -9,7 +9,7 @@
 # Download and tokenize data with MOSES tokenizer
 #
 
-data_path=.
+data_path=$(pwd)
 preprocess_exec=./tokenizer.sed
 
 # Get MOSES
@@ -265,6 +265,7 @@ rm $data_path/BEAN/formality-corpus.tgz
 rm -r $data_path/BEAN/data-for-release
 
 
+# TODO parasent model should receive untokenized, BPE-encoded data but this data is already tokenized
 # MASC sentences
 ## - Human scores of formality for words, phrases, and sentences (style-scores.tar.gz)
 ##   REF: Ellie Pavlick and Ani Nenkova. "Inducing Lexical Style Properties for Paraphrase and Genre Differentiation". NAACL 2015.
@@ -272,6 +273,7 @@ mkdir $data_path/MASC
 curl -Lo $data_path/MASC/style-scores.tar.gz http://www.seas.upenn.edu/~nlp/resources/style-scores.tar.gz
 tar -xvf $data_path/MASC/style-scores.tar.gz -C $data_path/MASC naacl-2015-style-scores/formality/human/sentence-scores
 
+# TODO parasent model should receive untokenized, BPE-encoded data
 masc_sentence_scores=$data_path/MASC/sentence-scores
 masc_tokenized_sentences=$data_path/MASC/masc-tokenized-sentences
 echo " * Tokenizing MASC sentences ..."
@@ -287,6 +289,30 @@ rm $data_path/MASC/style-scores.tar.gz
 # AmBrit
 git clone https://github.com/vrublack/AmBrit
 mv AmBrit/data/* $data_path/AmBrit
+
+
+# Amazon Japan
+git clone https://github.com/Darkmap/japanese_sentiment
+mkdir -p $data_path/AmazonJa
+mv japanese_sentiment/data/* $data_path/AmazonJa
+for file in $data_path/AmazonJa/*.txt; do
+   python3 split_ja_sentences.py < $file > $file.sp
+   # is already tokenized, detokenize (remove spaces)
+   sed "s/ //g" < $file.sp > $file.sp.detok
+   # tokenize with Mecab because original tokenized file was tokenized using a different tokenizer
+   mecab --output-format-type=wakati < $file.sp.detok > $file.sp.tok
+done
+rm -r japanese_sentiment
+
+
+# Rite2
+mkdir -p $data_path/Rite2
+curl -Lo $data_path/Rite2/RITE2_JA_bc-mc-unittest_forOpenAccess.tar.gz http://warehouse.ntcir.nii.ac.jp/openaccess/rite/data/RITE2_JA_bc-mc-unittest_forOpenAccess.tar.gz
+(cd $data_path/Rite2 && tar -xvf $data_path/Rite2/RITE2_JA_bc-mc-unittest_forOpenAccess.tar.gz)
+for unneeded in $data_path/Rite2/*/*.parsed.*.xml; do
+  rm $unneeded
+done
+rm $data_path/Rite2/RITE2_JA_bc-mc-unittest_forOpenAccess.tar.gz
 
 # remove moses folder
 rm -rf mosesdecoder

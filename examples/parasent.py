@@ -64,7 +64,11 @@ def output_reader():
 def batcher(params, batch):
     for sentence_tokens in batch:
         if sp:
-            sentence_tokens = sp.encode(' '.join(sentence_tokens), out_type=str)
+            if args.language == 'en':
+                sentence = ' '.join(sentence_tokens)
+            elif args.language == 'ja':
+                sentence = ''.join(sentence_tokens)
+            sentence_tokens = sp.encode(sentence, out_type=str)
         if len(sentence_tokens) > args.max_tokens:
             sentence_tokens = sentence_tokens[:args.max_tokens]
         sentence = ' '.join(sentence_tokens)
@@ -97,12 +101,14 @@ if __name__ == "__main__":
                                             'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
                                             'OddManOut', 'CoordinationInversion', 'MASC', 'BEAN'], nargs='+')
     parser.add_argument('--kfold', type=int, default=10)
+    parser.add_argument('--language', choices=['en', 'ja'], default='en')
     args = parser.parse_args()
 
     # Set params for SentEval
     params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': True, 'kfold': args.kfold, 'batch_size': 512,
                        'classifier': {'nhid': 0, 'optim': 'adam', 'batch_size': 64,
-                                      'tenacity': 5, 'epoch_size': 4}}
+                                      'tenacity': 5, 'epoch_size': 4},
+                       'tokenized': False}
 
     try:
         se = senteval.engine.SE(params_senteval, batcher, prepare)

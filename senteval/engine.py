@@ -17,7 +17,8 @@ import time
 from senteval import utils
 
 from senteval.bean_masc import BeanMascEval
-from senteval.binary import CREval, MREval, MPQAEval, SUBJEval, AmBritEval
+from senteval.binary import CREval, MREval, MPQAEval, SUBJEval, AmBritEval, AmazonJaEval
+from senteval.rite import Rite2JaBCEntailmentEval
 from senteval.snli import SNLIEval
 from senteval.trec import TRECEval
 from senteval.sick import SICKRelatednessEval, SICKEntailmentEval
@@ -56,7 +57,7 @@ class SE(object):
                            'STS14', 'STS15', 'STS16',
                            'Length', 'WordContent', 'Depth', 'TopConstituents',
                            'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
-                           'OddManOut', 'CoordinationInversion', 'AmBrit']
+                           'OddManOut', 'CoordinationInversion', 'AmBrit', 'AmazonJa', 'Rite2JaBC-Entailment']
 
     def eval(self, name):
         # evaluate on evaluation [name], either takes string or list of strings
@@ -76,8 +77,6 @@ class SE(object):
             self.evaluation = MREval(tpath + '/downstream/MR', seed=self.params.seed)
         elif name == 'MPQA':
             self.evaluation = MPQAEval(tpath + '/downstream/MPQA', seed=self.params.seed)
-        elif name == 'AmBrit':
-            self.evaluation = AmBritEval(tpath + '/downstream/AmBrit', seed=self.params.seed)
         elif name == 'SUBJ':
             self.evaluation = SUBJEval(tpath + '/downstream/SUBJ', seed=self.params.seed)
         elif name == 'SST2':
@@ -105,6 +104,12 @@ class SE(object):
         # added tasks
         elif name == 'BEAN' or name == 'MASC':
             self.evaluation = BeanMascEval(osp.join(tpath, 'downstream', name), name, seed=self.params.seed)
+        elif name == 'AmBrit':
+            self.evaluation = AmBritEval(tpath + '/downstream/AmBrit', seed=self.params.seed)
+        elif name == 'AmazonJa':
+            self.evaluation = AmazonJaEval(osp.join(tpath, 'downstream', name), self.params.tokenized, seed=self.params.seed)
+        elif name == 'Rite2JaBC-Entailment':
+            self.evaluation = Rite2JaBCEntailmentEval(osp.join(tpath, 'downstream', 'Rite2'), seed=self.params.seed)
 
         # Probing Tasks
         elif name == 'Length':
