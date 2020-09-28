@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 import JapaneseTokenizer
 import numpy as np
 
-from senteval.tools.validation import KFoldClassifier
+from senteval.tools.validation import InnerKFoldClassifier
 
 
 class Rite2JaBCEntailmentEval:
@@ -18,8 +18,12 @@ class Rite2JaBCEntailmentEval:
         self.mecab_wrapper = JapaneseTokenizer.MecabWrapper('unidic')
         dev = self.loadFile(os.path.join(task_path, 'RITE2_JA_dev_bc', 'RITE2_JA_dev_bc.xml'))
         test = self.loadFile(os.path.join(task_path, 'RITE2_JA_testlabel_bc', 'RITE2_JA_testlabel_bc.xml'))
-        # there is no train split so just use the dev split
-        self.data = {'train': dev, 'test': test}
+        train = {}
+        for key in dev.keys():
+            train[key] = dev[key]
+            train[key].extend(test[key])
+        # use dev as test together to do cross validation
+        self.data = {'train': train}
 
     def tokenize(self, sentence):
         return list(map(lambda tok: tok.word_surface, self.mecab_wrapper.tokenize(sentence).tokenized_objects))
@@ -38,16 +42,14 @@ class Rite2JaBCEntailmentEval:
 
         data['y'] = [label2id[s] for s in data['y']]
         return data
-    
+
     def do_prepare(self, params, prepare):
         samples = self.data['train']['X_A'] + \
-                  self.data['train']['X_B'] + \
-                  self.data['test']['X_A'] + self.data['test']['X_B']
+                  self.data['train']['X_B']
         return prepare(params, samples)
 
-
     def run(self, params, batcher):
-        embed = {'train': {}, 'test': {}}
+        embed = {'train': {}}
         bsize = params.batch_size
 
         for key in self.data:
@@ -71,30 +73,23 @@ class Rite2JaBCEntailmentEval:
                 embed[key][txt_type] = np.vstack(embed[key][txt_type])
             logging.info('Computed {0} embeddings'.format(key))
 
-        # Train
         trainA = embed['train']['X_A']
         trainB = embed['train']['X_B']
         trainF = np.c_[np.abs(trainA - trainB), trainA * trainB]
         trainY = np.array(self.data['train']['y'])
 
-        # Test
-        testA = embed['test']['X_A']
-        testB = embed['test']['X_B']
-        testF = np.c_[np.abs(testA - testB), testA * testB]
-        testY = np.array(self.data['test']['y'])
-
         config = {'nclasses': 2, 'seed': self.seed,
                   'usepytorch': params.usepytorch,
                   'classifier': params.classifier,
                   'nhid': params.nhid}
-        clf = KFoldClassifier(train={'X': trainF, 'y': trainY}, test={'X': testF, 'y': testY}, config=config)
+        clf = InnerKFoldClassifier(X=trainF, y=trainY, config=config)
 
         count = collections.defaultdict(int)
-        for y in testY:
+        for y in trainY:
             count[y] += 1
-        logging.debug('Test y histogram: ' + str(count))
+        logging.debug('Train histogram: ' + str(count))
 
-        devacc, testacc, _ = clf.run()
+        devacc, testacc = clf.run()
         logging.debug('\nDev acc : {0} Test acc : {1} for \
                        Rite2JaBC-Entailment\n'.format(devacc, testacc))
-        return {'devacc': devacc, 'acc': testacc, 'ntest': len(testA)}
+        return {'devacc': devacc, 'acc': testacc}
