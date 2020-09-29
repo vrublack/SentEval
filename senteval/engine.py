@@ -18,6 +18,7 @@ from senteval import utils
 
 from senteval.bean_masc import BeanMascEval
 from senteval.binary import CREval, MREval, MPQAEval, SUBJEval, AmBritEval, AmazonJaEval
+from senteval.formality_ja import FormalityJaEval
 from senteval.rite import Rite2JaBCEntailmentEval
 from senteval.snli import SNLIEval
 from senteval.trec import TRECEval
@@ -57,7 +58,8 @@ class SE(object):
                            'STS14', 'STS15', 'STS16',
                            'Length', 'WordContent', 'Depth', 'TopConstituents',
                            'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
-                           'OddManOut', 'CoordinationInversion', 'AmBrit', 'AmazonJa', 'Rite2JaBC-Entailment']
+                           'OddManOut', 'CoordinationInversion', 'AmBrit', 'AmazonJa',
+                           'Rite2JaBC-Entailment', 'FormalityJa']
 
     def eval(self, name):
         # evaluate on evaluation [name], either takes string or list of strings
@@ -110,6 +112,8 @@ class SE(object):
             self.evaluation = AmazonJaEval(osp.join(tpath, 'downstream', name), seed=self.params.seed)
         elif name == 'Rite2JaBC-Entailment':
             self.evaluation = Rite2JaBCEntailmentEval(osp.join(tpath, 'downstream', 'Rite2'), seed=self.params.seed)
+        elif name == 'FormalityJa':
+            self.evaluation = FormalityJaEval(osp.join(tpath, 'downstream', name), seed=self.params.seed)
 
         # Probing Tasks
         elif name == 'Length':

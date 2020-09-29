@@ -81,7 +81,8 @@ class Rite2JaBCEntailmentEval:
         config = {'nclasses': 2, 'seed': self.seed,
                   'usepytorch': params.usepytorch,
                   'classifier': params.classifier,
-                  'nhid': params.nhid}
+                  'nhid': params.nhid,
+                  'kfold': params.kfold}
         clf = InnerKFoldClassifier(X=trainF, y=trainY, config=config)
 
         count = collections.defaultdict(int)
