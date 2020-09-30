@@ -5,7 +5,7 @@ import logging
 import os
 import xml.etree.ElementTree as ET
 
-import JapaneseTokenizer
+import MeCab
 import numpy as np
 
 from senteval.tools.validation import InnerKFoldClassifier
@@ -15,7 +15,7 @@ class Rite2JaBCEntailmentEval:
     def __init__(self, task_path, seed=1111):
         logging.debug('***** Transfer task : Rite2JaBC-Entailment*****\n\n')
         self.seed = seed
-        self.mecab_wrapper = JapaneseTokenizer.MecabWrapper('unidic')
+        self.mecab_wrapper = MeCab.Tagger("-Owakati")
         dev = self.loadFile(os.path.join(task_path, 'RITE2_JA_dev_bc', 'RITE2_JA_dev_bc.xml'))
         test = self.loadFile(os.path.join(task_path, 'RITE2_JA_testlabel_bc', 'RITE2_JA_testlabel_bc.xml'))
         train = {}
@@ -26,7 +26,7 @@ class Rite2JaBCEntailmentEval:
         self.data = {'train': train}
 
     def tokenize(self, sentence):
-        return list(map(lambda tok: tok.word_surface, self.mecab_wrapper.tokenize(sentence).tokenized_objects))
+        return self.mecab_wrapper.parse(sentence).split()
 
     def loadFile(self, fpath):
         label2id = {'Y': 0, 'N': 1}

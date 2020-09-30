@@ -300,7 +300,7 @@ for file in $data_path/AmazonJa/*.txt; do
    # is already tokenized, detokenize (remove spaces), then tokenize with Mecab because original tokenized file was tokenized using a different tokenizer
    sed "s/ //g" < $file.sp | mecab --output-format-type=wakati > $file.sp.tok
 done
-rm -r japanese_sentiment
+rm -r -f japanese_sentiment
 
 
 # Rite2

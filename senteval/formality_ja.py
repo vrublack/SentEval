@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, unicode_literals
 import logging
 import os
 
-import JapaneseTokenizer
+import MeCab
 import numpy as np
 from sklearn.model_selection import train_test_split
 
@@ -25,7 +25,7 @@ class FormalityJaEval(object):
         self.nclasses = nclasses
         logging.debug('***** Transfer task : FormalityJa *****\n\n')
 
-        self.mecab_wrapper = JapaneseTokenizer.MecabWrapper('unidic')
+        self.mecab_wrapper = MeCab.Tagger("-Owakati")
 
         X_all = self.load_sentences(os.path.join(task_path, 'sentences.txt'))
         y_all = self.load_labels(os.path.join(task_path, 'formality-labels.txt'))
@@ -40,7 +40,7 @@ class FormalityJaEval(object):
         return prepare(params, samples)
 
     def tokenize(self, sentence):
-        return list(map(lambda tok: tok.word_surface, self.mecab_wrapper.tokenize(sentence).tokenized_objects))
+        return self.mecab_wrapper.parse(sentence).split()
 
     def load_sentences(self, fpath):
         with open(fpath, encoding='utf8') as f:
