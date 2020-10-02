@@ -14,6 +14,7 @@ import io
 import os
 import numpy as np
 import logging
+import MeCab
 
 from senteval.tools.validation import InnerKFoldClassifier
 
@@ -103,8 +104,14 @@ class AmBritEval(BinaryClassifierEval):
 class AmazonJaEval(BinaryClassifierEval):
     def __init__(self, task_path, seed=1111):
         logging.debug('***** Transfer task : AmazonJa *****\n\n')
-        positive = self.loadFile(os.path.join(task_path, '10000positive.txt.sp.tok'), encoding='utf8')
-        negative = self.loadFile(os.path.join(task_path, '10000negative.txt.sp.tok'), encoding='utf8')
+        self.mecab_wrapper = MeCab.Tagger("-Owakati")
+        positive = self.loadFile(os.path.join(task_path, '10000positive.txt.sp'), encoding='utf8')
+        negative = self.loadFile(os.path.join(task_path, '10000negative.txt.sp'), encoding='utf8')
         super(self.__class__, self).__init__(positive, negative, seed)
 
+    def loadFile(self, fpath, encoding='latin-1'):
+        with io.open(fpath, 'r', encoding=encoding) as f:
+            return [self.tokenize(line) for line in f.read().splitlines()]
 
+    def tokenize(self, sentence):
+        return self.mecab_wrapper.parse(sentence).split()

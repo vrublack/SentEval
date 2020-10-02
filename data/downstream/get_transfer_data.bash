@@ -296,9 +296,8 @@ git clone https://github.com/Darkmap/japanese_sentiment
 mkdir -p $data_path/AmazonJa
 mv japanese_sentiment/data/* $data_path/AmazonJa
 for file in $data_path/AmazonJa/*.txt; do
-   python3 split_ja_sentences.py < $file > $file.sp
-   # is already tokenized, detokenize (remove spaces), then tokenize with Mecab because original tokenized file was tokenized using a different tokenizer
-   sed "s/ //g" < $file.sp | mecab --output-format-type=wakati > $file.sp.tok
+   # is already tokenized, detokenize (remove spaces), then tokenize with Mecab in SentEval task
+   python3 split_ja_sentences.py < $file | sed "s/ //g" > $file.sp
 done
 rm -r -f japanese_sentiment
 
