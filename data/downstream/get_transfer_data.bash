@@ -313,11 +313,8 @@ done
 rm $data_path/Rite2/RITE2_JA_bc-mc-unittest_forOpenAccess.tar.gz
 
 
-# FormalityJa
-mkdir -p $data_path/FormalityJa
-git clone https://github.com/vrublack/Japanese-Data
-mv Japanese-Data/formality/* $data_path/FormalityJa
-rm -r -f Japanese-Data
+# FormalityJa: data is copied on server
+# TODO somehow publish this data and pull
 
 
 # remove moses folder
