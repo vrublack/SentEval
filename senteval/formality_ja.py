@@ -25,6 +25,7 @@ class FormalityJaEval(object):
         self.nclasses = nclasses
         logging.debug('***** Transfer task : FormalityJa *****\n\n')
 
+        # using Mecab instead of Kytea because Fasttext was tokenized with Mecab (they didn't specify which dictionary)
         self.mecab_wrapper = MeCab.Tagger("-Owakati")
 
         X_all = self.load_sentences(os.path.join(task_path, 'sentences.txt'))
