@@ -9,6 +9,13 @@
 # Download and tokenize data with MOSES tokenizer
 #
 
+
+if [[ -z $CORPUS_JA ]]; then
+  echo "CORPUS_JA variable must be set to point to a monolingual Japanese corpus"
+  exit 1
+fi
+
+
 data_path=$(pwd)
 preprocess_exec=./tokenizer.sed
 
@@ -315,6 +322,24 @@ rm $data_path/Rite2/RITE2_JA_bc-mc-unittest_forOpenAccess.tar.gz
 # FormalityJa: data is copied on server
 # TODO somehow publish this data and pull
 
+
+# Akama style annotations
+mkdir -p $data_path/StyleSimJa
+git clone https://github.com/jqk09a/stylistic-word-similarity-dataset-ja
+# we need to custommize tokenization because the Akama annotations used a tokenizer with a custom dictionary
+python3 -m Japanese.create_sudachi_dict < stylistic-word-similarity-dataset-ja/stylistic_wordsim.csv > $data_path/StyleSimJa/sudachi_dict.csv
+git clone https://github.com/WorksApplications/SudachiPy
+sudachipy ubuild $data_path/StyleSimJa/sudachi_dict.csv -o $data_path/StyleSimJa/sudachi_dict.dic
+echo "{" > SudachiPy/sudachipy/resources/sudachi-custom.json
+echo "\"userDict\" : [\"$data_path/StyleSimJa/sudachi_dict.dic\"]," >> SudachiPy/sudachipy/resources/sudachi-custom.json
+sed 1d SudachiPy/sudachipy/resources/sudachi.json >> SudachiPy/sudachipy/resources/sudachi-custom.json
+python3 -m Japanese.filter_corpus_akama \
+  --akama-file stylistic-word-similarity-dataset-ja/stylistic_wordsim.csv \
+  --corpus $CORPUS_JA \
+  --sudachipy-config SudachiPy/sudachipy/resources/sudachi-custom.json \
+  --out-path $data_path/StyleSimJa/stylistic_sentsim.csv
+rm -r -f stylistic-word-similarity-dataset-ja
+rm -r -f SudachiPy
 
 # remove moses folder
 rm -rf mosesdecoder

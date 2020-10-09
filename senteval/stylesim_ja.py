@@ -1,0 +1,63 @@
+import csv
+import logging
+import os.path as osp
+
+import MeCab
+import numpy as np
+from scipy import spatial
+from scipy.stats import spearmanr
+
+
+class StyleSimJaEval:
+    def __init__(self, task_path):
+        self.mecab_wrapper = MeCab.Tagger("-Owakati")
+
+        sent1, sent2, self.sim = self.load_file(osp.join(task_path, 'stylistic_sentsim.csv'))
+        self.sents = {'1': sent1, '2': sent2}
+
+    def load_file(self, sentence_style_path):
+        sent1, sent2, sim = [], [], []
+        with open(sentence_style_path, encoding='utf8') as f:
+            reader = csv.reader(f)
+            next(reader)  # skip the header
+            for row in reader:
+                sent1.append(self.tokenize(row[0]))
+                sent2.append(self.tokenize(row[1]))
+                sim.append(float(row[4]))
+
+        return sent1, sent2, sim
+
+    def tokenize(self, sentence):
+        return self.mecab_wrapper.parse(sentence).split()
+
+    def do_prepare(self, params, prepare):
+        samples = self.sents['1'] + self.sents['2']
+        prepare(params, samples)
+
+    def run(self, params, batcher):
+        embed = {}
+        bsize = params.batch_size
+
+        logging.info('Computing embeddings')
+        # Sort to reduce padding
+        sorted_data = sorted(zip(self.sents['1'],
+                                 self.sents['2'],
+                                 self.sim),
+                             key=lambda z: (len(z[0]), len(z[1])))
+        self.sents['1'], self.sents['2'], self.sim = map(list, zip(*sorted_data))
+
+        for key in self.sents.keys():
+            embed[key] = []
+            for ii in range(0, len(self.sents[key]), bsize):
+                batch = self.sents[key][ii:ii + bsize]
+                embeddings = batcher(params, batch)
+                embed[key].append(embeddings)
+            embed[key] = np.vstack(embed[key])
+            logging.info('Computed {0} embeddings'.format(key))
+
+        embed_dist = []
+        for e1, e2 in zip(embed['1'], embed['2']):
+            embed_dist.append(1 - spatial.distance.cosine(e1, e2))
+
+        return {'spearman': spearmanr(embed_dist, self.sim)[0],
+                'n': len(self.sim)}

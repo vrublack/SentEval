@@ -21,6 +21,7 @@ from senteval.binary import CREval, MREval, MPQAEval, SUBJEval, AmBritEval, Amaz
 from senteval.formality_ja import FormalityJaEval
 from senteval.rite import Rite2JaBCEntailmentEval
 from senteval.snli import SNLIEval
+from senteval.stylesim_ja import StyleSimJaEval
 from senteval.trec import TRECEval
 from senteval.sick import SICKRelatednessEval, SICKEntailmentEval
 from senteval.mrpc import MRPCEval
@@ -29,6 +30,7 @@ from senteval.sst import SSTEval
 from senteval.rank import ImageCaptionRetrievalEval
 from senteval.probing import *
 import os.path as osp
+
 
 class SE(object):
     def __init__(self, params, batcher, prepare=None):
@@ -59,7 +61,7 @@ class SE(object):
                            'Length', 'WordContent', 'Depth', 'TopConstituents',
                            'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
                            'OddManOut', 'CoordinationInversion', 'AmBrit', 'AmazonJa',
-                           'Rite2JaBC-Entailment', 'FormalityJa']
+                           'Rite2JaBC-Entailment', 'FormalityJa', 'StyleSimJa']
 
     def eval(self, name):
         # evaluate on evaluation [name], either takes string or list of strings
@@ -114,28 +116,30 @@ class SE(object):
             self.evaluation = Rite2JaBCEntailmentEval(osp.join(tpath, 'downstream', 'Rite2'), seed=self.params.seed)
         elif name == 'FormalityJa':
             self.evaluation = FormalityJaEval(osp.join(tpath, 'downstream', name), seed=self.params.seed)
+        elif name == 'StyleSimJa':
+            self.evaluation = StyleSimJaEval(osp.join(tpath, 'downstream', name))
 
         # Probing Tasks
         elif name == 'Length':
-                self.evaluation = LengthEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = LengthEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'WordContent':
-                self.evaluation = WordContentEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = WordContentEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'Depth':
-                self.evaluation = DepthEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = DepthEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'TopConstituents':
-                self.evaluation = TopConstituentsEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = TopConstituentsEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'BigramShift':
-                self.evaluation = BigramShiftEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = BigramShiftEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'Tense':
-                self.evaluation = TenseEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = TenseEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'SubjNumber':
-                self.evaluation = SubjNumberEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = SubjNumberEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'ObjNumber':
-                self.evaluation = ObjNumberEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = ObjNumberEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'OddManOut':
-                self.evaluation = OddManOutEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = OddManOutEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'CoordinationInversion':
-                self.evaluation = CoordinationInversionEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = CoordinationInversionEval(tpath + '/probing', seed=self.params.seed)
 
         self.params.current_task = name
         self.evaluation.do_prepare(self.params, self.prepare)
