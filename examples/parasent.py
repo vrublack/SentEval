@@ -18,7 +18,7 @@ import sys
 import threading
 
 import numpy as np
-import sentencepiece as spm
+import sentencepiece_ja.sp
 
 # Set PATHs
 PATH_TO_SENTEVAL = '..'
@@ -47,7 +47,7 @@ def prepare(params, samples):
         t.start()
 
     if args.bpe_model and sp is None:
-        sp = spm.SentencePieceProcessor(model_file=args.bpe_model)
+        sp = sentencepiece_ja.sp.SentencePieceProcessorJa(args.bpe_model)
 
 
 def end_process():
@@ -68,7 +68,7 @@ def batcher(params, batch):
                 sentence = ' '.join(sentence_tokens)
             elif args.language == 'ja':
                 sentence = ''.join(sentence_tokens)
-            sentence_tokens = sp.encode(sentence, out_type=str)
+            sentence_tokens = sp.encode_line(sentence)
         if len(sentence_tokens) > args.max_tokens:
             sentence_tokens = sentence_tokens[:args.max_tokens]
         sentence = ' '.join(sentence_tokens)
