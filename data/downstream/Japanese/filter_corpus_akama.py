@@ -38,9 +38,15 @@ def main(args):
                 all_pos = m.part_of_speech()
                 for pos_i in range(min(2, len(all_pos)) - 1, -1, -1):
                     entry = m.surface() + '/' + all_pos[pos_i]
-                    if entry in entry_to_sents and len(entry_to_sents[entry]) < args.sentences_per_pair:
+                    if entry in entry_to_sents:
                         entry_to_sents[entry].append(line)
                         break
+
+    for l in entry_to_sents.values():
+        # keep the shortest sentences
+        l.sort(key=lambda s: len(s))
+        if len(l) > args.sentences_per_pair:
+            del l[args.sentences_per_pair:]
 
     found, not_found = 0, 0
     total_list_len = 0
