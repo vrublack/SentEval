@@ -16,6 +16,7 @@ import io
 import copy
 import logging
 import numpy as np
+import MeCab
 
 from senteval.tools.validation import SplitClassifier
 
@@ -112,6 +113,35 @@ class WordContentEval(PROBINGEval):
         task_path = os.path.join(task_path, 'word_content.txt')
         # labels: 200 target words
         PROBINGEval.__init__(self, 'WordContent', task_path, seed)
+
+
+
+class WordContentJapaneseEval(PROBINGEval):
+    def __init__(self, task_path, seed=1111):
+        task_path = os.path.join(task_path, 'word_content_japanese.txt')
+        self.mecab_wrapper = MeCab.Tagger("-Owakati")
+        # labels: 200 target words
+        PROBINGEval.__init__(self, 'WordContent', task_path, seed)
+
+    def tokenize(self, sentence):
+        return self.mecab_wrapper.parse(sentence).split()
+
+    def loadFile(self, fpath):
+        self.tok2split = {'tr': 'train', 'va': 'dev', 'te': 'test'}
+        with io.open(fpath, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.rstrip().split('\t')
+                self.task_data[self.tok2split[line[0]]]['X'].append(self.tokenize(line[-1]))
+                self.task_data[self.tok2split[line[0]]]['y'].append(line[1])
+
+        labels = sorted(np.unique(self.task_data['train']['y']))
+        self.tok2label = dict(zip(labels, range(len(labels))))
+        self.nclasses = len(self.tok2label)
+
+        for split in self.task_data:
+            for i, y in enumerate(self.task_data[split]['y']):
+                self.task_data[split]['y'][i] = self.tok2label[y]
+
 
 """
 Latent Structural Information

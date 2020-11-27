@@ -304,7 +304,7 @@ mkdir -p $data_path/AmazonJa
 mv japanese_sentiment/data/* $data_path/AmazonJa
 for file in $data_path/AmazonJa/*.txt; do
    # is already tokenized, detokenize (remove spaces), then tokenize with Mecab in SentEval task
-   python3 split_ja_sentences.py < $file | sed "s/ //g" > $file.sp
+   python3 -m Japanese.split_ja_sentences < $file | sed "s/ //g" > $file.sp
 done
 rm -r -f japanese_sentiment
 
@@ -343,3 +343,9 @@ rm -r -f SudachiPy
 
 # remove moses folder
 rm -rf mosesdecoder
+
+
+# Japanese word probing
+python3 -m Japanese.create_word_content_dataset \
+    --corpus $CORPUS_JA \
+    --out-path ../probing/word_content_japanese.txt

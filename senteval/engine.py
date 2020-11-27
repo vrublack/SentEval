@@ -61,7 +61,7 @@ class SE(object):
                            'Length', 'WordContent', 'Depth', 'TopConstituents',
                            'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
                            'OddManOut', 'CoordinationInversion', 'AmBrit', 'AmazonJa',
-                           'Rite2JaBC-Entailment', 'FormalityJa', 'StyleSimJa']
+                           'Rite2JaBC-Entailment', 'FormalityJa', 'StyleSimJa', 'WordContentJapanese']
 
     def eval(self, name):
         # evaluate on evaluation [name], either takes string or list of strings
@@ -118,6 +118,8 @@ class SE(object):
             self.evaluation = FormalityJaEval(osp.join(tpath, 'downstream', name), seed=self.params.seed)
         elif name == 'StyleSimJa':
             self.evaluation = StyleSimJaEval(osp.join(tpath, 'downstream', name))
+        elif name == 'WordContentJapanese':
+            self.evaluation = WordContentJapaneseEval(tpath + '/probing', seed=self.params.seed)
 
         # Probing Tasks
         elif name == 'Length':
