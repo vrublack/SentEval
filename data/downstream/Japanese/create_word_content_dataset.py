@@ -1,19 +1,18 @@
 import argparse
 import collections
 import random
-
-from sudachipy import dictionary
+import MeCab
 
 random.seed(12345)
 
 
 def generate_corpus_tokens(corpus_path, return_detokenized=False):
-    tokenizer_obj = dictionary.Dictionary().create()
+    mecab_wrapper = MeCab.Tagger("-Owakati")
 
     with open(corpus_path, encoding='utf8') as f:
         for line in f:
             line = line.rstrip()
-            toks = list(map(lambda x: x.surface(), tokenizer_obj.tokenize(line)))
+            toks = mecab_wrapper.parse(line).split()
             if return_detokenized:
                 yield toks, line
             else:
