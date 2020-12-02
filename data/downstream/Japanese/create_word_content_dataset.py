@@ -58,7 +58,7 @@ freq_sorted = estimate_token_frequencies(args.corpus)
 
 # pick tokens with mid frequency rank (like https://arxiv.org/pdf/1805.01070.pdf)
 
-selected_tokens = set(freq_sorted[2000:2000 + args.n_words])  # TODO inspect
+selected_tokens = set(freq_sorted[2000:2000 + args.n_words])
 token_sentences = collections.defaultdict(list)
 complete = 0
 
