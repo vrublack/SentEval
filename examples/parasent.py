@@ -107,7 +107,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Set params for SentEval
-    params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': torch.cuda.is_available(), 'kfold': args.kfold, 'batch_size': 512,
+    params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': False, 'kfold': args.kfold, 'batch_size': 512,
                        'classifier': {'nhid': 0, 'optim': 'adam', 'batch_size': 64,
                                       'tenacity': 5, 'epoch_size': 4}}
 
