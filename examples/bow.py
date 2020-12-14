@@ -106,10 +106,12 @@ if __name__ == "__main__":
                                             'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
                                             'OddManOut', 'CoordinationInversion', 'MASC', 'BEAN'], nargs='+')
     parser.add_argument('--kfold', type=int, default=10)
+    parser.add_argument('--noreg', action='store_true', default=False)
+    parser.add_argument('--usepytorch', action='store_true', default=False)
     args = parser.parse_args()
 
     # Set params for SentEval
-    params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': False, 'kfold': args.kfold}
+    params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': args.usepytorch, 'kfold': args.kfold, 'noreg': args.noreg}
     params_senteval['classifier'] = {'nhid': 0, 'optim': 'rmsprop', 'batch_size': 128,
                                      'tenacity': 3, 'epoch_size': 2}
 

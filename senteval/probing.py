@@ -77,7 +77,8 @@ class PROBINGEval(object):
 
         config_classifier = {'nclasses': self.nclasses, 'seed': self.seed,
                              'usepytorch': params.usepytorch,
-                             'classifier': params.classifier}
+                             'classifier': params.classifier,
+                             'noreg': params.noreg}
 
         if self.task == "WordContent" and params.classifier['nhid'] > 0:
             config_classifier = copy.deepcopy(config_classifier)

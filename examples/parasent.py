@@ -104,10 +104,12 @@ if __name__ == "__main__":
                                             'OddManOut', 'CoordinationInversion', 'MASC', 'BEAN'], nargs='+')
     parser.add_argument('--kfold', type=int, default=10)
     parser.add_argument('--language', choices=['en', 'ja'], default='en')
+    parser.add_argument('--usepytorch', action='store_true', default=False)
+    parser.add_argument('--noreg', action='store_true', default=False)
     args = parser.parse_args()
 
     # Set params for SentEval
-    params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': False, 'kfold': args.kfold, 'batch_size': 512,
+    params_senteval = {'task_path': PATH_TO_DATA, 'usepytorch': args.usepytorch, 'kfold': args.kfold, 'batch_size': 512, 'noreg': args.noreg,
                        'classifier': {'nhid': 0, 'optim': 'adam', 'batch_size': 64,
                                       'tenacity': 5, 'epoch_size': 4}}
 
