@@ -10,6 +10,7 @@ if [[ -z $MAIN_CODE_DIR ]]; then
   exit 1
 fi
 
+data_path=$(pwd)
 
 # Amazon Japan
 git clone https://github.com/Darkmap/japanese_sentiment
