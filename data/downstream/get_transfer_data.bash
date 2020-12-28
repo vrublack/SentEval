@@ -15,6 +15,11 @@ if [[ -z $CORPUS_JA ]]; then
   exit 1
 fi
 
+if [[ -z $MAIN_CODE_DIR ]]; then
+  echo "MAIN_CODE_DIR variable must be set to point to the main codebase with the Japanese package"
+  exit 1
+fi
+
 
 data_path=$(pwd)
 preprocess_exec=./tokenizer.sed
@@ -319,9 +324,16 @@ done
 rm $data_path/Rite2/RITE2_JA_bc-mc-unittest_forOpenAccess.tar.gz
 
 
-# FormalityJa: data is copied on server
-# TODO somehow publish this data and pull
-
+# FormalityJa
+olddir=$(pwd)
+cd $MAIN_CODE_DIR || exit
+python3 -m Japanese.create_classifier_dataset \
+    --in-jp $CORPUS_JA \
+    --out-dir $data_path/FormalityJa \
+    --balance \
+    --first 1000 \
+    --task formality
+cd $olddir || exit
 
 # Akama style annotations
 mkdir -p $data_path/StyleSimJa
