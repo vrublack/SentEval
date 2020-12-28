@@ -12,8 +12,10 @@ class StyleSimJaEval:
     def __init__(self, task_path):
         self.mecab_wrapper = MeCab.Tagger("-Owakati")
 
-        sent1, sent2, self.sim = self.load_file(osp.join(task_path, 'stylistic_sentsim.csv'))
-        self.sents = {'1': sent1, '2': sent2}
+        self.sents = {}
+        for sp in ['dev', 'test']:
+            sent1, sent2, sim = self.load_file(osp.join(task_path, f'stylistic_sentsim_{sp}.csv'))
+            self.sents[sp] = {'1': sent1, '2': sent2, 'sim': sim}
 
     def load_file(self, sentence_style_path):
         sent1, sent2, sim = [], [], []
@@ -31,33 +33,41 @@ class StyleSimJaEval:
         return self.mecab_wrapper.parse(sentence).split()
 
     def do_prepare(self, params, prepare):
-        samples = self.sents['1'] + self.sents['2']
+        samples = []
+        for sp in ['dev', 'test']:
+            samples += self.sents[sp]['1'] + self.sents[sp]['2']
         prepare(params, samples)
 
     def run(self, params, batcher):
-        embed = {}
-        bsize = params.batch_size
+        results = {}
 
-        logging.info('Computing embeddings')
-        # Sort to reduce padding
-        sorted_data = sorted(zip(self.sents['1'],
-                                 self.sents['2'],
-                                 self.sim),
-                             key=lambda z: (len(z[0]), len(z[1])))
-        self.sents['1'], self.sents['2'], self.sim = map(list, zip(*sorted_data))
+        for sp in ['dev', 'test']:
+            embed = {}
+            bsize = params.batch_size
 
-        for key in self.sents.keys():
-            embed[key] = []
-            for ii in range(0, len(self.sents[key]), bsize):
-                batch = self.sents[key][ii:ii + bsize]
-                embeddings = batcher(params, batch)
-                embed[key].append(embeddings)
-            embed[key] = np.vstack(embed[key])
-            logging.info('Computed {0} embeddings'.format(key))
+            logging.info('Computing embeddings')
+            # Sort to reduce padding
+            sorted_data = sorted(zip(self.sents[sp]['1'],
+                                     self.sents[sp]['2'],
+                                     self.sents[sp]['sim']),
+                                 key=lambda z: (len(z[0]), len(z[1])))
+            sents1, sents2, sim = map(list, zip(*sorted_data))
+            sents = {'1': sents1, '2': sents2}
 
-        embed_dist = []
-        for e1, e2 in zip(embed['1'], embed['2']):
-            embed_dist.append(1 - spatial.distance.cosine(e1, e2))
+            for key in sents.keys():
+                embed[key] = []
+                for ii in range(0, len(sents[key]), bsize):
+                    batch = sents[key][ii:ii + bsize]
+                    embeddings = batcher(params, batch)
+                    embed[key].append(embeddings)
+                embed[key] = np.vstack(embed[key])
+                logging.info('Computed {0} embeddings'.format(key))
 
-        return {'spearman': spearmanr(embed_dist, self.sim)[0],
-                'n': len(self.sim)}
+            embed_dist = []
+            for e1, e2 in zip(embed['1'], embed['2']):
+                embed_dist.append(1 - spatial.distance.cosine(e1, e2))
+
+            results.update({f'spearman_{sp}': spearmanr(embed_dist, sim)[0], f'n_{sp}': len(sim)})
+
+        return results
+

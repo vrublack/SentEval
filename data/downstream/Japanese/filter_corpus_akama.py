@@ -1,5 +1,6 @@
 import argparse
 import csv
+import random
 
 from sudachipy import dictionary
 
@@ -45,8 +46,9 @@ def main(args):
     for l in entry_to_sents.values():
         # keep the shortest sentences
         l.sort(key=lambda s: len(s))
-        if len(l) > args.sentences_per_pair:
-            del l[args.sentences_per_pair:]
+        if len(l) > args.sentences_per_pair * 2:
+            del l[args.sentences_per_pair * 2:]
+        random.shuffle(l)
 
     found, not_found = 0, 0
     total_list_len = 0
@@ -60,30 +62,44 @@ def main(args):
     print(f'Found {found} / {found + not_found} entries, avg list len {total_list_len / found}')
 
     found_pairs = 0
-    with open(args.out_path, 'w', encoding='utf8') as f:
-        wr = csv.writer(f, quoting=csv.QUOTE_ALL)
-        wr.writerow(['sentence 1', 'sentence 2'] + header.split(','))
 
-        for line in style_lines:
-            comps = line.split(',')
-            entry1, entry2 = comps[0], comps[1]
-            found = False
-            for entry1_sent in entry_to_sents[entry1]:
-                for entry2_sent in entry_to_sents[entry2]:
-                    found = True
-                    wr.writerow([entry1_sent] + [entry2_sent] + [entry1] + [entry2] + comps[2:])
+    for split in ['dev', 'test']:
+        with open(getattr(args, 'out_path_' + split), 'w', encoding='utf8') as f:
+            wr = csv.writer(f, quoting=csv.QUOTE_ALL)
+            wr.writerow(['sentence 1', 'sentence 2'] + header.split(','))
 
-            if found:
-                found_pairs += 1
+            for line in style_lines:
+                comps = line.split(',')
+                entry1, entry2 = comps[0], comps[1]
+                found = False
+
+                right_center = random.randint(0, 1)
+                half1, half2 = (len(entry_to_sents[entry1]) + right_center) // 2, \
+                               (len(entry_to_sents[entry2]) + right_center) // 2
+                if split == 'dev':
+                    l1, l2 = entry_to_sents[entry1][:half1], entry_to_sents[entry2][:half2]
+                else:
+                    l1, l2 = entry_to_sents[entry1][half1:], entry_to_sents[entry2][half2:]
+
+                for entry1_sent in l1:
+                    for entry2_sent in l2:
+                        found = True
+                        wr.writerow([entry1_sent] + [entry2_sent] + [entry1] + [entry2] + comps[2:])
+
+                if found:
+                    found_pairs += 1
 
     print(f'Found {found_pairs} / {len(style_lines)} entry pairs')
 
 
 if __name__ == '__main__':
+    random.seed(12345)
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--akama-file', required=True)
     parser.add_argument('--corpus', required=True)
-    parser.add_argument('--out-path', required=True)
+    parser.add_argument('--out-path-dev', required=True)
+    parser.add_argument('--out-path-test', required=True)
     parser.add_argument('--sudachipy-config', required=True)
     parser.add_argument('--sentences-per-pair', default=5, type=int, help='Finds up to this many sentences per pair')
     main(parser.parse_args())

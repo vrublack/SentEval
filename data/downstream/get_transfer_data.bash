@@ -337,7 +337,8 @@ python3 -m Japanese.filter_corpus_akama \
   --akama-file stylistic-word-similarity-dataset-ja/stylistic_wordsim.csv \
   --corpus $CORPUS_JA \
   --sudachipy-config SudachiPy/sudachipy/resources/sudachi-custom.json \
-  --out-path $data_path/StyleSimJa/stylistic_sentsim.csv
+  --out-path-dev $data_path/StyleSimJa/stylistic_sentsim_dev.csv \
+  --out-path-test $data_path/StyleSimJa/stylistic_sentsim_test.csv
 rm -r -f stylistic-word-similarity-dataset-ja
 rm -r -f SudachiPy
 
