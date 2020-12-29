@@ -41,7 +41,9 @@ python3 -m Japanese.create_classifier_dataset \
     --out-dir $data_path/FormalityJa \
     --balance \
     --first 1000 \
-    --task formality
+    --task formality \
+    --limit-substr "ありがとうございます" "おはようございます" \
+    --deduplicate
 cd $olddir || exit
 
 # Akama style annotations
