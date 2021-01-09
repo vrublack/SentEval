@@ -1,5 +1,6 @@
 import csv
 import logging
+import math
 import os.path as osp
 
 import MeCab
@@ -65,7 +66,11 @@ class StyleSimJaEval:
 
             embed_dist = []
             for e1, e2 in zip(embed['1'], embed['2']):
-                embed_dist.append(1 - spatial.distance.cosine(e1, e2))
+                dist = spatial.distance.cosine(e1, e2)
+                if math.isnan(dist):
+                    print('Warning: skipped nan value')
+                else:
+                    embed_dist.append(1 - dist)
 
             results.update({f'spearman_{sp}': spearmanr(embed_dist, sim)[0], f'n_{sp}': len(sim)})
 
