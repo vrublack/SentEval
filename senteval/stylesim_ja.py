@@ -52,7 +52,7 @@ class StyleSimJaEval:
                                      self.sents[sp]['2'],
                                      self.sents[sp]['sim']),
                                  key=lambda z: (len(z[0]), len(z[1])))
-            sents1, sents2, sim = map(list, zip(*sorted_data))
+            sents1, sents2, sims = map(list, zip(*sorted_data))
             sents = {'1': sents1, '2': sents2}
 
             for key in sents.keys():
@@ -65,14 +65,16 @@ class StyleSimJaEval:
                 logging.info('Computed {0} embeddings'.format(key))
 
             embed_dist = []
-            for e1, e2 in zip(embed['1'], embed['2']):
+            sims_keep = []
+            for e1, e2, sim in zip(embed['1'], embed['2'], sims):
                 dist = spatial.distance.cosine(e1, e2)
                 if math.isnan(dist):
                     print('Warning: skipped nan value')
                 else:
                     embed_dist.append(1 - dist)
+                    sims_keep.append(sim)
 
-            results.update({f'spearman_{sp}': spearmanr(embed_dist, sim)[0], f'n_{sp}': len(sim)})
+            results.update({f'spearman_{sp}': spearmanr(embed_dist, sims_keep)[0], f'n_{sp}': len(sims_keep)})
 
         return results
 
