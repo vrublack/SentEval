@@ -40,7 +40,7 @@ python3 -m Japanese.create_classifier_dataset \
     --in-jp $CORPUS_JA \
     --out-dir $data_path/FormalityJa \
     --balance \
-    --first 10000 \
+    --first 8000 \
     --task formality \
     --limit-substr "ありがとうございます" "おはようございます" \
     --deduplicate
