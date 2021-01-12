@@ -31,7 +31,7 @@ class FormalityJaEval(object):
         X_all = self.load_sentences(os.path.join(task_path, 'sentences.txt'))
         y_all = self.load_labels(os.path.join(task_path, 'formality-labels.txt'))
 
-        X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.5, random_state=seed)
+        X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.95, random_state=seed)
 
         self.data = {'train': {'X': X_train, 'y': y_train}, 'test': {'X': X_test, 'y': y_test}}
 
