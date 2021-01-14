@@ -30,8 +30,12 @@ class FormalityJaEval(object):
 
         X_all = self.load_sentences(os.path.join(task_path, 'sentences.txt'))
         y_all = self.load_labels(os.path.join(task_path, 'formality-labels.txt'))
+        X_all, X_test = X_all[:3000], X_all[3000:]
+        y_all, y_test = y_all[:3000], y_all[3000:]
 
-        X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.9375, random_state=seed)
+        # don't use old test splits because they're too small
+        # TODO just split on all data after experiments are done
+        X_train, X_test_old, y_train, y_test_old = train_test_split(X_all, y_all, test_size=0.5, random_state=seed)
 
         self.data = {'train': {'X': X_train, 'y': y_train}, 'test': {'X': X_test, 'y': y_test}}
 
